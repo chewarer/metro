@@ -20,7 +20,7 @@ import json
 def upload_photo(request):
     if request.method == "POST" and request.FILES:
         form_img = MultiImg(request.POST, request.FILES)
-        print(request.GET)
+        # print(request.GET)
         # print(request.FILES)
         if form_img.is_valid():
             # print(form_img.cleaned_data.get('title'))
@@ -42,10 +42,18 @@ def upload_photo(request):
 @login_required
 def del_photo(request, pk):
     """Удаление фото"""
-    print(request.method)
+    # print(request.method)
     if request.method == 'GET':
         print(pk)
-        x = MultiImages.objects.filter(pk=pk).delete()
+
+        for photo in MyObject.objects.get(pk=pk).photos.all():
+            if photo.myobject_set.count() == 1:
+                x = photo.delete()
+            # else:
+            #     # Нужно получить pk объекта для того чтобы удалить фото связанные с ним
+            #     x = MyObject.objects.get(pk=pk)
+            #     x.photos.
+        # x = MultiImages.objects.filter(pk=pk).delete()
         if x[0] != 0:
             return JsonResponse({'status': 'ok'})
         return JsonResponse({'status': 'false'})
@@ -56,7 +64,7 @@ def save_weight(request):
     """Сохранение веса фото"""
     if request.method == 'GET':
         data = json.loads(request.GET['data'])
-        print(data)
+        # print(data)
         if data:
             for item in data:
                 MultiImages.objects.filter(pk=item['id']).update(weight=item['weight'])
@@ -67,7 +75,7 @@ def save_weight(request):
 @login_required
 def add_object(request):
     error = ""
-    photos_list = None
+    photo_list = None
     if request.method == "POST":
         form = MyObjectForm(request.POST)
 
@@ -79,18 +87,22 @@ def add_object(request):
                 error = "Номер находится в черном списке"
             else:
                 post.my_manager = request.user
-                post.save()
                 # Задаю родителя для изображений
-                MultiImages.objects.filter(parent_id=None, my_manager_id=request.user.id).update(parent_id=post.id)
+                photo_list = MultiImages.objects.filter(myobject__photos=None, my_manager_id=request.user.id)\
+                    .values_list('id', flat=True)
+                post.save()
+                post.photos.add(*list(photo_list))
+                post.save()
+                form.save_m2m()
                 return redirect('my_object')
     else:
         form = MyObjectForm()
         # Подчищаю бесхозные файлы (у которых нет родителя и которые принадлежат текущему пользователю)
         # MultiImages.objects.filter(parent_id=None, my_manager=request.user).delete()
-        # Отображаю бесхозные файлы, предполагая что они загружены только что текущим пользователем
-        photos_list = MultiImages.objects.filter(parent_id=None, my_manager=request.user).order_by('weight').all()
+        # Отображаю бесхозные файлы, предполагая что они загружены только что, текущим пользователем
+        photo_list = MultiImages.objects.filter(myobject__photos=None, my_manager=request.user).order_by('weight').all()
 
-    return render(request, 'myobject/add-object.html', {"form": form, 'error': error, 'photos': photos_list})
+    return render(request, 'myobject/add-object.html', {"form": form, 'error': error, 'photos': photo_list})
 
 
 @login_required
@@ -198,17 +210,20 @@ class ObjUpdate(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(ObjUpdate, self).get_context_data(**kwargs)
-        pk = self.kwargs.get('pk')
-        photos_list = MultiImages.objects.filter(parent_id=pk).order_by('weight').all()
-        context['photos'] = photos_list
+        # pk = self.kwargs.get('pk')
+        photo_list = self.object.photos.all().order_by('weight')
+        context['photos'] = photo_list
         return context
 
     def form_valid(self, form, **kwargs):
         self.object = form.save(commit=False)
+        # self.object.save()
+        form.save_m2m()
+        # pk = self.kwargs.get('pk')
+        photo_list = MultiImages.objects.filter(myobject__photos=None, my_manager_id=self.request.user.id) \
+            .values_list('id', flat=True)
+        self.object.photos.add(*list(photo_list))
         self.object.save()
-        # print(self.request.user)
-        pk = self.kwargs.get('pk')
-        MultiImages.objects.filter(parent_id=None, my_manager_id=self.request.user).update(parent_id=pk)
         return redirect('my_object')
 
 
@@ -218,12 +233,28 @@ class ObjCopy(LoginRequiredMixin, UpdateView):
     template_name = "myobject/copy-obj.html"
     form_class = MyObjectForm
 
+    def get_context_data(self, **kwargs):
+        context = super(ObjCopy, self).get_context_data(**kwargs)
+        photo_list = self.object.photos.all().order_by('weight')
+        context['photos'] = photo_list
+        return context
+
     def form_valid(self, form):
         form.instance.my_manager = self.request.user
         # Для копирования устанавливаю pk и id в None
+        pk = form.instance.pk
         form.instance.pk = None
         form.instance.id = None
         form.instance.zvon = timezone.now()
+        self.object = form.save(commit=False)
+        self.object.save()
+        form.save_m2m()
+        # Связываю фото с новым объектом
+        imgs = MultiImages.objects.filter(myobject__photos=None, my_manager_id=self.request.user.id)\
+            .values_list('id', flat=True).distinct()
+        imgs2 = MultiImages.objects.filter(myobject__photos__myobject=pk).values_list('id', flat=True).distinct()
+        self.object.photos.add(*list(imgs | imgs2))
+        self.object.save()
         return super(ObjCopy, self).form_valid(form)
 
 

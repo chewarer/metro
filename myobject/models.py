@@ -14,6 +14,28 @@ def get_sentinel_user():
     return get_user_model().objects.get_or_create(username='deleted')[0]
 
 
+class MultiImages(models.Model):
+    """Изображения прикрепленные к объектам. Основа для мультизагрузки фото."""
+    # parent = models.ManyToManyField(MyObject, blank=True, null=True, verbose_name='Объект')
+    title = models.CharField(max_length=255, blank=True)
+    file = models.ImageField(upload_to='object_photos/%Y%m')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    weight = models.IntegerField(null=True, blank=True, verbose_name='Вес')
+    my_manager = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                   on_delete=models.SET(get_sentinel_user), )
+
+    def __str__(self):
+        return self.file.name
+
+
+@receiver(models.signals.pre_delete, sender=MultiImages, weak=False)
+def delete_photo(sender, instance, **kwargs):
+    """Физически удаляет файл с сервера при удалении его из базы"""
+    path_to_photo = instance.file.path
+    if os.path.exists(path_to_photo):
+        os.remove(path_to_photo)
+
+
 class StancMetro(models.Model):
     '''Станции метро'''
     class Meta():
@@ -107,6 +129,7 @@ class MyObject(models.Model):
     history = HistoricalRecordsExtended(user_related_name="history_object")
     area_range = models.CharField(choices=RANGE_AREA,
                                   max_length=50, blank=True, null=True)
+    photos = models.ManyToManyField(MultiImages, blank=True, db_index=True, verbose_name='Изображения')
 
     def __str__(self):
         return self.adres
@@ -124,22 +147,12 @@ class MyObject(models.Model):
         super().save(*args, **kwargs)
 
 
-class MultiImages(models.Model):
-    """Изображения прикрепленные к объектам. Основа для мультизагрузки фото."""
-    parent = models.ForeignKey(MyObject, blank=True, null=True, verbose_name='Объект')
-    title = models.CharField(max_length=255, blank=True)
-    file = models.ImageField(upload_to='object_photos/%Y%m')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    weight = models.IntegerField(null=True, blank=True, verbose_name='Вес')
-    my_manager = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
-                                   on_delete=models.SET(get_sentinel_user), )
-
-    def __str__(self):
-        return self.file.name
-
-
-@receiver(models.signals.pre_delete, sender=MultiImages, weak=False)
-def delete_photo(sender, instance, **kwargs):
-    path_to_photo = instance.file.path
-    if os.path.exists(path_to_photo):
-        os.remove(path_to_photo)
+@receiver(models.signals.pre_delete, sender=MyObject, weak=False)
+def delete_object(sender, instance, **kwargs):
+    """
+        При удалении объекта MyObject, удаляет связанные с ним объекты MultiImages, 
+        если они не принадлежат кому-то еще
+    """
+    for photo in instance.photos.all():
+        if photo.myobject_set.count() == 1:
+            photo.delete()
