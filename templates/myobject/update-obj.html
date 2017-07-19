@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<form   method="post" action="">
+<form id="edit-object" data-obj_id="{{ object.id }}" method="post" action="">
     {% csrf_token %}
     {% bootstrap_form form %}
     {% include 'myobject/file-fields.html' %}

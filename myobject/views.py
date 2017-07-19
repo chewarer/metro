@@ -42,20 +42,41 @@ def upload_photo(request):
 @login_required
 def del_photo(request, pk):
     """Удаление фото"""
-    # print(request.method)
     if request.method == 'GET':
-        print(pk)
+        response_ok = JsonResponse({'status': 'ok'})
+        object_id = request.GET.get('object_id')
+        photo_id = pk
 
-        for photo in MyObject.objects.get(pk=pk).photos.all():
-            if photo.myobject_set.count() == 1:
-                x = photo.delete()
-            # else:
-            #     # Нужно получить pk объекта для того чтобы удалить фото связанные с ним
-            #     x = MyObject.objects.get(pk=pk)
-            #     x.photos.
-        # x = MultiImages.objects.filter(pk=pk).delete()
-        if x[0] != 0:
-            return JsonResponse({'status': 'ok'})
+        if object_id:
+            # Удаляю фото из объекта, если объект известен
+            obj = MyObject.objects.get(pk=object_id).photos.all()
+            photo = obj.filter(pk=photo_id).first()
+            if photo:
+                # Если фото имеет привязку к объекту (не загружено только что, без сохранения объекта)
+                if photo.myobject_set.count() == 1:
+                    # Если фото не связано с другим объектом
+                    photo.delete()
+                    return response_ok
+                else:
+                    # Если фото связано и с другими объектами тоже
+                    obj = MyObject.objects.filter(pk=object_id).first()
+                    photo = MultiImages.objects.filter(pk=photo_id).first()
+                    obj.photos.remove(photo)
+                    return response_ok
+            else:
+                # Если фото загружно, но еще не привязано к текущему объекту
+                x = MultiImages.objects.filter(pk=photo_id).delete()
+                if x[0] != 0:
+                    return response_ok
+
+        else:
+            # Если объект не известен
+            if MultiImages.objects.filter(pk=photo_id).first().myobject_set.count() == 0:
+                # Если фото не имеет связей
+                x = MultiImages.objects.filter(pk=photo_id).delete()
+                if x[0] != 0:
+                    return response_ok
+
         return JsonResponse({'status': 'false'})
 
 

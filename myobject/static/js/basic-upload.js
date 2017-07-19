@@ -38,15 +38,16 @@ $(function () {
     // Удаление файла
     $("body" ).on( "click", '.del-photo', function() {
         pk = $(this).attr('data-url');
+        object_id = $('#edit-object').attr('data-obj_id');
         // alert(url);
         row = $(this).parent().parent();
         $.ajax({
             url: '/login/object/delete/photo/' + pk,
             dataType: 'json',
             type: 'GET',
+            data: {'object_id': object_id},
             success: function (data) {
                 // console.log(JSON.stringify(data));
-                // console.log(data['status']);
                 if (data['status'] == 'ok') {
                     row.remove();
                 }
