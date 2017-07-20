@@ -8,6 +8,7 @@ from django.dispatch import receiver
 from myclient.models import Okrug, Naznach, HistoricalRecordsExtended
 from .utils import translit_filename
 
+from sorl.thumbnail import delete
 import os
 
 
@@ -32,6 +33,7 @@ class MultiImages(models.Model):
 @receiver(models.signals.pre_delete, sender=MultiImages, weak=False)
 def delete_photo(sender, instance, **kwargs):
     """Физически удаляет файл с сервера при удалении его из базы"""
+    delete(instance)  # Удаление thumb
     path_to_photo = instance.file.path
     if os.path.exists(path_to_photo):
         os.remove(path_to_photo)

@@ -20,7 +20,11 @@ body {
     background: rgba(218, 218, 218, 0.5);
 }
 #gallery tr td:first-child {
-    width: 80%;
+    width: 56px;
+    vertical-align: middle;
+}
+#gallery tr td:nth-child(2) {
+    width: 90%;
     vertical-align: middle;
 }
 #gallery tr td:last-child {

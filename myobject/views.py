@@ -14,6 +14,8 @@ from black_list.models import BlackList
 from myclient.forms import SerchNameForm
 from django.db.models import Q
 import json
+from sorl.thumbnail import get_thumbnail
+from sorl.thumbnail import delete
 
 
 @login_required
@@ -27,8 +29,12 @@ def upload_photo(request):
             form_img.instance.my_manager = request.user
             form_img.instance.weight = 1
             photo = form_img.save()
+            im = get_thumbnail(photo, '50x40', crop='center', quality=80)
+            print(im.url)
+            # delete(my_file)
             data = {
                 'is_valid': True,
+                'thumb': im.url,
                 'name': photo.file.name,
                 'url': photo.file.url,
                 'pk': photo.id,
@@ -55,6 +61,7 @@ def del_photo(request, pk):
                 # Если фото имеет привязку к объекту (не загружено только что, без сохранения объекта)
                 if photo.myobject_set.count() == 1:
                     # Если фото не связано с другим объектом
+                    delete(photo)  # Удаление thumb
                     photo.delete()
                     return response_ok
                 else:
@@ -65,7 +72,9 @@ def del_photo(request, pk):
                     return response_ok
             else:
                 # Если фото загружно, но еще не привязано к текущему объекту
+                delete(MultiImages.objects.get(pk=photo_id))  # Удаление thumb
                 x = MultiImages.objects.filter(pk=photo_id).delete()
+                delete(x)
                 if x[0] != 0:
                     return response_ok
 
@@ -73,6 +82,7 @@ def del_photo(request, pk):
             # Если объект не известен
             if MultiImages.objects.filter(pk=photo_id).first().myobject_set.count() == 0:
                 # Если фото не имеет связей
+                delete(MultiImages.objects.get(pk=photo_id))  # Удаление thumb
                 x = MultiImages.objects.filter(pk=photo_id).delete()
                 if x[0] != 0:
                     return response_ok

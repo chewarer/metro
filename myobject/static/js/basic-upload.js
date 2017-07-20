@@ -26,7 +26,7 @@ $(function () {
     done: function (e, data) {
       if (data.result.is_valid) {
         $("#gallery tbody").prepend(
-          "<tr data-weight='1'><td><a href='" + data.result.url + "'>" + data.result.name + "</a></td><td><div class='btn btn-sm btn-danger delete del-photo' data-url='" + data.result.pk + "'><i class='glyphicon glyphicon-trash'></i> удалить</div></td></tr>"
+          "<tr data-weight='1'><td><img src='" + data.result.thumb + "'></td><td><a href='" + data.result.url + "'>" + data.result.name + "</a></td><td><div class='btn btn-sm btn-danger delete del-photo' data-url='" + data.result.pk + "'><i class='glyphicon glyphicon-trash'></i> удалить</div></td></tr>"
         );
       }
     }

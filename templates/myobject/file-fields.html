@@ -1,4 +1,4 @@
-{% load static %}
+{% load static thumbnail %}
 
 <label for="photo-upload">Изображения</label>
 {#    Загруженные фотографии#}
@@ -6,6 +6,11 @@
   <tbody>
     {% for photo in photos %}
       <tr data-weight='{{ photo.weight }}'>
+        <td>
+            {% thumbnail photo "50x40" crop="center" as im %}
+                <img src="{{ im.url }}">
+            {% endthumbnail %}
+        </td>
         <td><a href="{{ photo.file.url }}">{{ photo.file.name }}</a></td>
         <td>
             <div class='btn btn-sm btn-danger delete del-photo' data-url='{{ photo.pk }}'>
