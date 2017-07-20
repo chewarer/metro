@@ -6,6 +6,7 @@ from django.conf import settings
 from django.dispatch import receiver
 
 from myclient.models import Okrug, Naznach, HistoricalRecordsExtended
+from .utils import translit_filename
 
 import os
 
@@ -18,7 +19,7 @@ class MultiImages(models.Model):
     """Изображения прикрепленные к объектам. Основа для мультизагрузки фото."""
     # parent = models.ManyToManyField(MyObject, blank=True, null=True, verbose_name='Объект')
     title = models.CharField(max_length=255, blank=True)
-    file = models.ImageField(upload_to='object_photos/%Y%m')
+    file = models.ImageField(upload_to=translit_filename)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     weight = models.IntegerField(null=True, blank=True, verbose_name='Вес')
     my_manager = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
