@@ -1,0 +1,57 @@
+{% extends 'base-site.html' %}
+{% load bootstrap3 %}
+{% block search %}
+
+{% endblock %}
+{% block content-title %}
+
+{% endblock %}
+
+{% block content %}
+<div class="home-obj">
+{% if mytest %}
+{% regroup mytest by station_one as metro %}
+    {% for objs in metro %}
+        <div class="st-metro">
+            <p> <span class="st-p">метро</span>
+                <span class="st-span">{{objs.grouper}}</span>
+            </p>
+        </div>
+        <div class="block-metro-s">
+            {% for obj in objs.list %}
+                <div class="myobj">
+                    <p>
+                        {% with obj.station_one.photo_set.all.0 as img %}
+                            <a href="{% url 'obj_single' pk=obj.id %}"><img class="st-obj-img" src="{{MEDIA_URL}}{{ img.image.url }}" alt="Аренда помещений"></a>
+                        {% endwith %}
+                    </p>
+                    <p>
+                    {{obj.price}} Р/месяц </br>
+                    {{obj.adres}}</br>
+                    {{obj.station_one}} {% if obj.station_two %} {{obj.station_two2}} {% endif %}   </br>
+                    150 метров от метро </br></br>
+                    <div class="area">
+                        {{obj.area}} м<sup>2</sup>
+                    </div>
+                    </p>
+                </div>
+            {% endfor %}
+        </div>
+    <div class="clearfix">
+    </div>
+{% endfor %}
+
+  {% else %}
+    <h1>По вашему запросу нет результатов</h1>
+  {% endif %}
+  <div class="clearfix">
+  </div>
+  <h2>Не нашли подходящего помещения или требуется помощь?</h2>
+  <div class="btn-zay">
+       <a href="{% url 'contact' %}" class="cont-btn zay-btn">ОСТАВИТЬ ЗАЯВКУ</a>
+  </div>
+</div>
+<div class="clearfix">
+</div>
+
+{% endblock %}

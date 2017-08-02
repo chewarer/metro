@@ -37,9 +37,9 @@
       {% for obj in objs %}
       <div class="myobj">
           <p>
-              {% for img in imgs %}
-              <a href="{% url 'obj_single' pk=obj.id %}"><img src="{{MEDIA_URL}}{{ img.image.url }}" width="100%" height="100%" alt="Аренда помещений"></a>
-              {% endfor %}
+              {% with obj.station_one.photo_set.all.0 as img %}
+                  <a href="{% url 'obj_single' pk=obj.id %}"><img src="{{MEDIA_URL}}{{ img.image.url }}" width="100%" height="100%" alt="Аренда помещений"></a>
+              {% endwith %}
           </p>
           <p>
               {{obj.price}} Р/месяц </br>
@@ -57,9 +57,9 @@
     {% for obj in myobj %}
         <div class="myobj-h">
             <p class="p-img">
-                {% for img in imgs %}
-                <a href="{% url 'obj_single' pk=obj.id %}"><img src="{{MEDIA_URL}}{{ img.image.url }}" width="100%" height="100%" alt="Аренда помещений"></a>
-                {% endfor %}
+                {% with obj.station_one.photo_set.all.0 as img %}
+                    <a href="{% url 'obj_single' pk=obj.id %}"><img class="st-obj-img" src="{{MEDIA_URL}}{{ img.image.url }}" alt="Аренда помещений"></a>
+                {% endwith %}
             </p>
             <p>
                 {{obj.price}} Р/месяц </br>

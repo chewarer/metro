@@ -4,5 +4,6 @@ django-bootstrap3
 django-allauth
 mysqlclient
 django-simple-history==1.9.0
+django-debug-toolbar
 pytils==0.3
 sorl-thumbnail==12.3

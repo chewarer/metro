@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
+from django.views.generic import View
 
 from myclient.models import Okrug
 from myobject.models import MyObject, MultiImages, StancMetro
@@ -12,13 +13,22 @@ def home(request):
     myobj = MyObject.objects.all().order_by('-id')[:3]
     form = SearchObjFullFront()
     if request.method == "POST":
+        order = "station_one"
         form = SearchObjFullFront(request.POST)
         if form.is_valid():
-            myobjs = []
             form_price = form.cleaned_data['price']
             okrug = form.cleaned_data['okrug']
             area = form.cleaned_data['area_range']
             naznach = form.cleaned_data['naznach']
+            sort = form.cleaned_data['sort']
+            if sort == '1':
+                order = "station_one__name"
+            elif sort == '2':
+                order = "price"
+            elif sort == '3':
+                order = "station_one"
+            elif sort == '4':
+                order = "id"
 
             if form_price == '6' or form_price == "":
                 price = 10000000
@@ -29,59 +39,34 @@ def home(request):
                 okrug = Okrug.objects.all()
 
             if (not area) and (not naznach):
-                for st in StancMetro.objects.filter(okrug__in=okrug).distinct():
-                    myobjs.append(MyObject.objects.filter(
-                        price__lte=price,
-                        okrug__in=okrug,
-                        station_one=st
-                    ).order_by("station_one"))
+                myobjs = MyObject.objects.filter(
+                                price__lte=price,
+                                okrug__in=okrug
+                                ).order_by(order).distinct()
             elif not area:
-                for st in StancMetro.objects.filter(okrug__in=okrug).distinct():
-                    myobjs.append(MyObject.objects.filter(
-                        naznach=form.cleaned_data['naznach'],
-                        price__lte=price,
-                        okrug__in=okrug,
-                        station_one=st
-                    ).order_by("station_one"))
+                myobjs = MyObject.objects.filter(
+                                naznach=form.cleaned_data['naznach'],
+                                price__lte=price,
+                                okrug__in=okrug
+                            ).order_by(order).distinct()
             elif not naznach:
-                for st in StancMetro.objects.filter(okrug__in=okrug).distinct():
-                    myobjs.append(MyObject.objects.filter(
-                        area_range=area,
-                        price__lte=price,
-                        okrug__in=okrug,
-                        station_one=st
-                        ).order_by("station_one"))
+                myobjs = MyObject.objects.filter(
+                                area_range=area,
+                                price__lte=price,
+                                okrug__in=okrug
+                            ).order_by(order).distinct()
             else:
-                for st in StancMetro.objects.filter(okrug__in=okrug).distinct():
-                    myobjs.append(MyObject.objects.filter(
-                        naznach=form.cleaned_data['naznach'],
-                        area_range=area,
-                        price__lte=price,
-                        okrug__in=okrug,
-                        station_one=st
-                    ).order_by("station_one"))
-            print(myobjs)
-            if myobjs:
-                for sts in myobjs:
-                    for st in sts:
-                        img = Photo.objects.filter(station=st.station_one)[:1]
-                        if img:
-                            context = {'myobjs': myobjs,
-                                   'form': form, 'imgs': img}
-                        else:
-                            context = {'myobjs': myobjs, 'form': form}
-                        return render(request, 'site/search.html', context)
+                myobjs = MyObject.objects.filter(
+                                naznach=form.cleaned_data['naznach'],
+                                area_range=area,
+                                price__lte=price,
+                                okrug__in=okrug
+                            ).order_by(order).distinct()
+            form = SearchObjFullFront(data=request.POST)
+            context = {'mytest': myobjs, 'form': form}
+            return render(request, 'site/search.html', context)
 
-            context = {'form': form}
-            return render(request, 'site/home.html', context)
-
-    if myobj:
-        for st in myobj:
-            img = Photo.objects.filter(station=st.station_one)[:1]
-            if img:
-                context = {'myobj': myobj, 'form': form, 'imgs': img}
-                return render(request, 'site/home.html', context)
-        context = {'myobj': myobj, 'form': form}
+    context = {'myobj': myobj, 'form': form}
     return render(request, 'site/home.html', context)
 
 
@@ -93,13 +78,11 @@ def search_object(request):
             search = form.cleaned_data['search']
             myobject = get_object_or_404(MyObject, id=search)
             photos = MultiImages.objects.filter(parent=myobject)
-            print(photos)
             try:
-                img = Photo.objects.filter(station=myobject.station_one)[:1]
                 img_obj = MyObject.objects.\
-                    filter(okrug=myobject.okrug.all()[:1])
+                            filter(okrug=myobject.okrug.all()[:1])
                 context = {'obj': myobject, 'photos': photos,
-                           'imgs': img,  'img_objs': img_obj}
+                            'img_objs': img_obj}
             except:
                 context = {'obj': myobject, 'photos': photos}
     else:
@@ -110,6 +93,7 @@ def search_object(request):
 
 def search_metro(request):
     ''' Поиск станции метро '''
+    form = SearchObjFullFront()
     if request.method == "POST":
         form = SearchMetroFront(request.POST)
         if form.is_valid():
@@ -117,50 +101,35 @@ def search_metro(request):
             metro = MyObject.objects.\
                 filter(Q(station_one__name=search) |
                        Q(station_two__name=search))
-            if metro.exists():
-                for st in metro:
-                    img = Photo.objects.filter(station=st.station_one)[:1]
-                    context = {'search_object': metro, 'imgs': img}
-            else:
-                context = {'search_object': metro}
+            context = {'search_object': metro, 'form': form}
     else:
         return redirect('/')
     return render(request, 'site/search.html', context)
 
 
 def obj_single(request, pk):
-    '''Переход по ссылки на объект,
-    сделать более организовано, без копипаста
-    '''
+    '''Переход по ссылки на объект'''
     myobject = get_object_or_404(MyObject, pk=pk)
     photos = MultiImages.objects.filter(parent=myobject)
     try:
-        img = Photo.objects.filter(station=myobject.station_one)[:1]
-        img_obj = MyObject.objects.\
-            filter(okrug=myobject.okrug.all()[:1])
-        context = {'obj': myobject, 'photos': photos,
-                   'imgs': img, 'img_objs': img_obj}
+        img_obj = MyObject.objects.filter(station_one=myobject.station_one)
+        context = {'obj': myobject, 'photos': photos, 'img_objs': img_obj}
     except:
         context = {'obj': myobject, 'photos': photos}
-
     return render(request, 'site/obj-single.html', context)
 
 
 def new_obj(request):
     '''Новые объекты'''
-    myobj = MyObject.objects.order_by('-id')[:16]
-    for st in myobj:
-        img = Photo.objects.filter(station=st.station_one)[:1]
-        context = {'search_object': myobj, 'imgs': img}
-
-    return render(request, 'site/search.html', context)
+    myobjs = MyObject.objects.all().order_by("station_one")[:16]
+    form = SearchObjFullFront()
+    context = {'mytest': myobjs, 'form': form}
+    return render(request, 'site/obj.html', context)
 
 
 def under(request):
     '''Объекты подземки'''
-    myobj = MyObject.objects.filter(typeobj=4)
-    if myobj:
-        for st in myobj:
-            img = Photo.objects.filter(station=st.station_one)[:1]
-            context = {'search_object': myobj, 'imgs': img}
-    return render(request, 'site/search.html', context)
+    myobjs = MyObject.objects.filter(typeobj=4).order_by("-station_one")
+    form = SearchObjFullFront()
+    context = {'mytest': myobjs, 'form': form}
+    return render(request, 'site/obj.html', context)

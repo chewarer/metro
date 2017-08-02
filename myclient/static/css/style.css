@@ -192,6 +192,7 @@ a.a-nav::before{
 }
 form.form_s_3s {
     width: 100%;
+    padding-bottom: 10px;
 }
 .btn-search-obj{
     background-color: #db2c27 !important;
@@ -205,6 +206,9 @@ form.form_s_3s {
     width: 200px;
     float: left;
     margin-left: 35px;
+}
+select#id_naznach {
+    width: 195px;
 }
 .form_s_3s .radio input[type=radio]{
     position: absolute;
@@ -284,7 +288,9 @@ form.form_s_3s {
     /* font-style: italic; */
 }
 
-.p-img{
+.st-obj-img {
+    width: 275px;
+    height: 190px;
 }
 .obj-cont{
     float: left;
@@ -368,16 +374,30 @@ form.form_s_3s {
     text-decoration: none !important;
     color: #fff !important;
 }
-.table-obj{
+.table-obj {
     width: 600px !important;
+    border: none !important;
+    background-color: #efefef;
 }
 .td-op{
     width: 30%;
+    background-color: #00599D;
+    color: #fff;
 }
 .okrug-singl{
     float: left;
 }
-
+.td-zn {
+    border-bottom: 1px dashed #ddddff !important;
+    border-top: none !important;
+}
+.znak-m:after {
+    content: "M";
+    display: block;
+    color: #fff;
+    margin: 0 0 0 2px;
+    font-size: 12px;
+}
 /*Старница поиска*/
 span.st-p {
     color: red;
@@ -396,6 +416,16 @@ span.st-span {
     /* float: right; */
     margin: -110px 0 60px 150px;
 }
+.area2 {
+    border: 1px solid #000;
+    width: 100px;
+    text-align: center;
+    height: 40px;
+    vertical-align: middle;
+    line-height: 35px;
+    /* float: right; */
+    margin: -85px 0 60px 150px;
+}
 .st-metro {
     padding: 10px;
     border-top: 1px solid;
@@ -406,6 +436,38 @@ span.st-span {
 }
 a.zay-btn{
     padding: 20px;
+}
+.sort-hide{
+    background-color: #e5e5e5;
+}
+.sort-hide p{
+    font-size: 22px;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 0 0 0 55px;
+    line-height: 60px;
+}
+.sort-search{
+    display: none;
+}
+.sort {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 0 30px 0;
+}
+.sort-po {
+    margin: 0 15px 0 0;
+    font-size: 17px;
+    text-transform: uppercase;
+}
+.sort-pr a{
+    margin: 0 50px 0 20px;
+    font-size: 17px;
+    color: #9c9c9c;
+}
+.sort-pr a:hover{
+    color: #000;
+    text-decoration: none;
 }
 /*Футер*/
 footer{

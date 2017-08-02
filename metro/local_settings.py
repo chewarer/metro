@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'contactform',
     'black_list',
     'photo_baza',
-    'sorl.thumbnail'
 ]
 
 MIDDLEWARE = [
@@ -196,8 +195,3 @@ DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.logging.LoggingPanel',
     'debug_toolbar.panels.redirects.RedirectsPanel',
 ]
-
-try:
-    from .local_settings import *
-except ImportError:
-    from .prod_settings import *

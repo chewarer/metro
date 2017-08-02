@@ -57,3 +57,4 @@ class SearchObjFullFront(forms.Form):
                                      label='',
                                      error_messages={'required': ''},
                                      required=False)
+    sort = forms.CharField(max_length=1, initial="1", widget=forms.HiddenInput)

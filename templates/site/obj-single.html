@@ -7,9 +7,9 @@
 
 {% block content %}
 <script type="text/javascript">
-$(document).ready(function() {
-    $("a.gallery").fancybox();
-});
+// $(document).ready(function() {
+//     $("a.gallery").fancybox();
+// });
 </script>
     {% if obj %}
     {# for obj in obj_single #}
@@ -18,57 +18,60 @@ $(document).ready(function() {
     <table class="table table-bordered table-hover table-obj">
         <tr>
             <td class="td-op">Локация</td>
-            <td><div class="okrug-singl">
-                {% for okrug in obj.okrug.all %}
-                    {{okrug.options}},
-                {% endfor %}
+            <td class="td-zn">
+                <div class="okrug-singl">
+                    {% for okrug in obj.okrug.all %}
+                        {{okrug.options}},
+                    {% endfor %}
                 </div>
-                <div style="width: 10px; height:10px; background-color:    {{obj.station_one.color}};border-radius: 10px;float: left; margin: 5px;">
+
+                <div class="znak-m" style="width: 15px; height:15px; background-color: {{obj.station_one.color}};border-radius: 10px;float: left; margin: 2px;">
                 </div>
+                
                     {{obj.station_one}} {% if obj.station_two %}, {{obj.station_two}} {% endif %}
             </td>
         </tr>
         <tr>
-            <td>Тип объекта</td>
-            <td>
+            <td class="td-op">Тип объекта</td>
+            <td class="td-zn">
                 {{obj.get_typeobj_display}}, {{obj.etaj}} этаж
             </td>
         </tr>
         <tr>
-            <td>Коммерческие условия</td>
-            <td>
+            <td class="td-op">Коммерческие условия</td>
+            <td class="td-zn">
                 <strong>{{obj.block_area}} м<sup>2</sup> - {{obj.block_price}} руб - {{obj.block_procent}} %</strong>
             </td>
         </tr>
         <tr>
-            <td>Описание объекта</td>
-            <td>
+            <td class="td-op">Описание объекта</td>
+            <td class="td-zn">
                 {{obj.opis}}
             </td>
         </tr>
         <tr>
-            <td>Назначение</td>
-            <td>
+            <td class="td-op">Назначение</td>
+            <td class="td-zn">
                 {% for naznach in obj.naznach.all %}
                     {{naznach.options}},
                 {% endfor %}
             </td>
         </tr>
         <tr>
-            <td>Характеристики</td>
-            <td>
+            <td class="td-op">Характеристики</td>
+            <td class="td-zn">
                 <strong>{{obj.kvt}} КВТ</strong>
             </td>
         </tr>
         <tr>
-            <td>Вид договора</td>
-            <td>
+            <td class="td-op">Вид договора</td>
+            <td class="td-zn">
                 {{obj.dogovor}}
             </td>
         </tr>
         <tr>
-            <td>Основной трафик</td>
-            <td>
+            <td class="td-op">Основной трафик</td>
+            <td class="td-zn">
 
             </td>
         </tr>
@@ -82,13 +85,11 @@ $(document).ready(function() {
 
     {% for obj in img_objs %}
     <div class="img-obj-opis">
-        {% for img in imgs %}
+        {% with obj.station_one.photo_set.all.0 as img %}
         <div class="img-obj">
-                <img class="img-sop-obj"
-                src="{{MEDIA_URL}}{{ img.image.url }}"  alt="Аренда помещений">
+            <img class="img-sop-obj" src="{{MEDIA_URL}}{{ img.image.url }}" alt="Аренда помещений">
         </div>
-        {% endfor %}
-
+        {% endwith %}
         <strong>
         <a href="{% url 'obj_single' pk=obj.id %}">
             <p class="p-pohoj">
@@ -121,7 +122,7 @@ $(document).ready(function() {
     <div class="img-obj-right">
         {% for photo in photos %}
         <div class="img-obj-singl">
-            <a class="gallery" href="{{MEDIA_URL}}{{ photo.file.url }}">
+            <a class="gallery" data-fancybox="images" href="{{MEDIA_URL}}{{ photo.file.url }}">
             <img class="pr-obj" src="{{MEDIA_URL}}{{ photo.file.url }}"  alt="Аренда помещений">
             </a>
         </div>
@@ -149,7 +150,28 @@ $(document).ready(function() {
 <script>
 jQuery(document).ready(function($) {
     $('.pr-obj:first').css({'width':'280px', 'height':'180px'});
-    
+    $().fancybox({
+      selector : '[data-fancybox="images"]',
+      thumbs   : false,
+      hash     : false,
+    });
+
+    $(".main-slider").slick({
+      slidesToShow   : 3,
+      slidesToScroll : 3,
+      infinite   : true,
+      dots       : false,
+      arrows     : false,
+      responsive : [
+        {
+          breakpoint: 960,
+          settings: {
+            slidesToShow: 1,
+            slidesToScroll: 1
+          }
+        }
+      ]
+    });
 });
 </script>
 {% endblock %}
