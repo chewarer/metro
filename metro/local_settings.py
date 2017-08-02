@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'contactform',
     'black_list',
     'photo_baza',
+    'sorl.thumbnail',
 ]
 
 MIDDLEWARE = [
