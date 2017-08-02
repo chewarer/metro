@@ -9,6 +9,7 @@ from myclient.models import Okrug, Naznach, HistoricalRecordsExtended
 from .utils import translit_filename
 
 from sorl.thumbnail import delete
+from PIL import Image
 import os
 
 
@@ -28,6 +29,18 @@ class MultiImages(models.Model):
 
     def __str__(self):
         return self.file.name
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        """Изменение размера изображения при сохранении"""
+        super(MultiImages, self).save()
+        ratio = self.file.width / self.file.height
+        width = 800
+        height = int(width / ratio)
+        img = Image.open(self.file.path)
+        new_img = img.resize((width, height), Image.BICUBIC)
+        # new_img.show()
+        new_img.save(self.file.path)
 
 
 @receiver(models.signals.pre_delete, sender=MultiImages, weak=False)

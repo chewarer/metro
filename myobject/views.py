@@ -30,7 +30,7 @@ def upload_photo(request):
             form_img.instance.weight = 1
             photo = form_img.save()
             im = get_thumbnail(photo, '50x40', crop='center', quality=80)
-            print(im.url)
+            # print(im.url)
             # delete(my_file)
             data = {
                 'is_valid': True,
